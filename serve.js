@@ -20,13 +20,13 @@ const locations = [
     // 'Dawson',
     // 'Denver',
     // 'Detroit',
-    // 'Dutch Harbor',
+    // /* test */ // 'Dutch Harbor',
     // 'El Paso',
     // 'Fairbanks',
     // 'Great Falls',
     // 'Green Bay',
     // 'Halifax',
-    // 'Hawaiian Islands',
+    // /* test */ // 'Hawaiian Islands',
     // 'Houston',
     // 'Jacksonville',
     // 'Juneau',
@@ -51,9 +51,9 @@ const locations = [
     // 'San Antonio',
     // 'San Francisco',
     // 'Seattle',
-    // 'Seward',
-    // 'St Louis',
-    // 'Twin Cities',
+    'Seward',
+    'St Louis',
+    'Twin Cities',
     'Washington',
     'Western Aleutian Islands',
     'Whitehorse',
@@ -76,15 +76,15 @@ function createWorker() {
 
     if (indexs.length > 0) {
         const temp = indexs.pop();
-        workers(locations[temp], function (err, outp) {
-            if (err) {
-                console.log('Error: ' + err);
+        workers(locations[temp], function (err, message) {
+            if (err && (!err.isUser === true)) {
+                throw err;
                 createWorker();
-            } else if (outp.error) {
-                console.log('Error: ' + outp.error);
+            } else if (err) {
+                console.log(`${locations[temp]}: ${err}`);
                 createWorker();
             } else {    
-                console.log(`${locations[temp]}: ${outp.message}`);
+                console.log(`${locations[temp]}: ${message}`);
                 createWorker();
             }
         })

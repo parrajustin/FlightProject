@@ -1,56 +1,79 @@
 {
-    "Albuquerque": {},
-    "Anchorage": {},
-    "Atlanta": {},
+    "Albuquerque": {
+        "west": -109
+    },
+    "Anchorage": {
+        "west": -151.5
+    },
+    "Atlanta": {
+        "west": -88,
+        "north": 36.21667
+    },
     "Bethel": {},
     "Billings": {},
     "Brownsville": {},
-    "Cape Lisburne": {},
+    "Cape_Lisburne": {},
     "Charlotte": {},
     "Cheyenne": {},
     "Chicago": {},
     "Cincinnati": {},
-    "Cold Bay": {},
-    "Dallas-Ft Worth": {},
+    "Cold_Bay": {},
+    "Dallas_Ft_Worth": {},
     "Dawson": {},
     "Denver": {},
     "Detroit": {},
-    "Dutch Harbor": {},
-    "El Paso": {},
+    "Dutch_Harbor": {},
+    "El_Paso": {},
     "Fairbanks": {},
-    "Great Falls": {},
-    "Green Bay": {},
+    "Great_Falls": {},
+    "Green_Bay": {},
     "Halifax": {},
-    "Hawaiian Islands": {},
+    "Hawaiian_Islands": {},
     "Houston": {},
     "Jacksonville": {},
     "Juneau": {},
-    "Kansas City": {},
+    "Kansas_City": {},
     "Ketchikan": {},
-    "Klamath Falls": {},
+    "Klamath_Falls": {},
     "Kodiak": {},
-    "Lake Huron": {},
-    "Las Vegas": {},
-    "Los Angeles": {},
+    "Lake_Huron": {},
+    "Las_Vegas": {},
+    "Los_Angeles": {},
     "McGrath": {},
     "Memphis": {},
     "Miami": {},
     "Montreal": {},
-    "New Orleans": {},
-    "New York": {},
+    "New_Orleans": {},
+    "New_York": {},
     "Nome": {},
     "Omaha": {},
     "Phoenix": {},
-    "Point Barrow": {},
-    "Salt Lake City": {},
-    "San Antonio": {},
-    "San Francisco": {},
+    "Point_Barrow": {},
+    "Salt_Lake_City": {},
+    "San_Antonio": {},
+    "San_Francisco": {},
     "Seattle": {},
     "Seward": {},
-    "St Louis": {},
-    "Twin Cities": {},
+    "St_Louis": {
+        "west": -91
+    },
+    "Twin_Cities": {
+        "west": -101,
+        "south": 44.5
+    },
     "Washington": {},
-    "Western Aleutian Islands": {},
-    "Whitehorse": {},
-    "Wichita": {}
+    "Western_Aleutian_Islands": {},
+    "Whitehorse": {
+        "west": -141
+    },
+    "Wichita": {},
+    "Western_Aleutian_Islands_West_SEC_51.htm": {
+        "west": 169.3667,
+        "north": 53.16667,
+        "east": 178
+    },
+    "Western_Aleutian_Islands_East_SEC_51.htm": {
+        "west": 178,
+        "north": 53.16667
+    }
 }
