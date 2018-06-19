@@ -13,6 +13,24 @@ const geoBoundData = require('./data.json');
 
 const numCheck = new RegExp(/[-\d.]/);
 
+function contructExecPromise(command) {
+    return new Promise((resolve, reject) => {
+        exec(command, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+/**
+ * build a user error that has a property, used in logging
+ *
+ * @param {*} input
+ * @returns
+ */
 function userError(input) {
     const err = new Error(input);
     err.isUser = true;
@@ -67,7 +85,6 @@ function correctMaps(fileFriendlyLocation, fileJson) {
             const periodLocation = metaFile.indexOf('.');
             const fileName = metaFile.substr(0, periodLocation);
             const inImg = path.join(__dirname, 'data', fileFriendlyLocation, `${fileName}.tif`);
-            const outImg = path.join(__dirname, 'data', fileFriendlyLocation, `${fileName}.clipped.tif`);
 
             jetpack.readAsync(metaPath).then(
                 (data) => {
@@ -117,43 +134,57 @@ function correctMaps(fileFriendlyLocation, fileJson) {
             
                     // if the image goes over the 180 degree divide line split it into 2 in the else section
                     if (westNumber < eastNumber) {
-                        exec(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te ${westNumber} ${southNumber} ${eastNumber} ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${outImg}"`, (err) => {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                callback(null, `${fileName}.clipped.tif`);
-                            }
-                        });
+                        const clippedFile = `${fileName}.clipped.tif`;
+                        const rgbFile = `${fileName}.rgb.tif`;
+
+                        const clippedOut = path.join(__dirname, 'data', fileFriendlyLocation, clippedFile);
+                        const rgbOut = path.join(__dirname, 'data', fileFriendlyLocation, rgbFile);
+
+                        contructExecPromise(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te ${westNumber} ${southNumber} ${eastNumber} ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${clippedOut}"`).then(
+                            () => contructExecPromise(`gdal_translate -expand rgb "${clippedOut}" ${rgbOut}`)
+                        ).then(
+                            () => callback(null, [clippedFile, rgbFile])
+                        ).catch(
+                            (err) => callback(err) 
+                        );
                     } else {
                         async.parallel([
                             (innerCallback) => {
                                 // handle positive side
-                                const subImg = path.join(__dirname, 'data', fileFriendlyLocation, `${fileName}_west.clipped.tif`);
+                                const clippedFile = `${fileName}_west.clipped.tif`;
+                                const rgbFile = `${fileName}_west.rgb.tif`;
 
-                                exec(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te ${westNumber} ${southNumber} 180 ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${subImg}"`, (err) => {
-                                    if (err) {
-                                        innerCallback(err);
-                                    } else {
-                                        innerCallback(null, `${fileName}_west.clipped.tif`);
-                                    }
-                                });
+                                const clippedOut = path.join(__dirname, 'data', fileFriendlyLocation, clippedFile);
+                                const rgbOut = path.join(__dirname, 'data', fileFriendlyLocation, rgbFile);
+
+                                contructExecPromise(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te ${westNumber} ${southNumber} 180 ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${clippedOut}"`).then(
+                                    () => contructExecPromise(`gdal_translate -expand rgb "${clippedOut}" ${rgbOut}`)
+                                ).then(
+                                    () => innerCallback(null, [clippedFile, rgbFile])
+                                ).catch(
+                                    (err) => innerCallback(err) 
+                                );
                             }, (innerCallback) => {
                                 // handle negative side
-                                const subImg = path.join(__dirname, 'data', fileFriendlyLocation, `${fileName}_east.clipped.tif`);
+                                const clippedFile = `${fileName}_east.clipped.tif`;
+                                const rgbFile = `${fileName}_east.rgb.tif`;
 
-                                exec(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te -180 ${southNumber} ${eastNumber} ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${subImg}"`, (err) => {
-                                    if (err) {
-                                        innerCallback(err);
-                                    } else {
-                                        innerCallback(null, `${fileName}_east.clipped.tif`);
-                                    }
-                                });
+                                const clippedOut = path.join(__dirname, 'data', fileFriendlyLocation, clippedFile);
+                                const rgbOut = path.join(__dirname, 'data', fileFriendlyLocation, rgbFile);
+
+                                contructExecPromise(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te -180 ${southNumber} ${eastNumber} ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${clippedOut}"`).then(
+                                    () => contructExecPromise(`gdal_translate -expand rgb "${clippedOut}" ${rgbOut}`)
+                                ).then(
+                                    () => innerCallback(null, [clippedFile, rgbFile])
+                                ).catch(
+                                    (err) => innerCallback(err) 
+                                );
                             }
                         ], (err, results) => {
                             if (err) {
                                 callback(err);
                             } else {
-                                callback(null, results);
+                                callback(null, _.flatten(results));
                             }
                         });
                     }
@@ -165,8 +196,28 @@ function correctMaps(fileFriendlyLocation, fileJson) {
             if (err) {
                 reject(err);
             } else {
-                fileJson['files'] = _.union(fileJson['files'], _.filter(_.flatten(results), (s) => (s || '').length > 0));
-                resolve(fileJson);
+                // fileJson['files'] = _.union(fileJson['files'], _.filter(_.flatten(results), (s) => (s || '').length > 0));
+                const allFiles = _.union(fileJson['files'], _.filter(_.flatten(results), (s) => (s || '').length > 0));
+
+                const fiterFunc = (f) => {
+                    const fileArry = f.split('.');
+                    if (fileArry[fileArry.length - 1] === 'htm') {
+                        return true;
+                    } else if (fileArry[fileArry.length - 1] === 'tif' && fileArry.length > 2 && fileArry[fileArry.length - 2] === 'rgb') {
+                        return true;
+                    }
+                };
+
+                const filesToBeKept = _.filter(allFiles, fiterFunc);
+                const filesToDelete = _.filter(allFiles, (f) => !fiterFunc(f));
+
+                fileJson['files'] = filesToBeKept;
+
+                removeOldFiles(fileFriendlyLocation, { 'files': filesToDelete }).then(
+                    () => resolve(fileJson)
+                ).catch(
+                    (reason) => reject(reason)
+                );
             }
         })
     });
@@ -467,8 +518,8 @@ module.exports = function sectionalPipeline(loc, WorkerCallback) {
         (sectionalInfoJson) => {
             /**
              * In Paralleld do the following
-             * 1) save the info from the api into a file to be check against
-             * 2) downoad the zip file stated in the api outlet
+             * 1 save the info from the api into a file to be check against
+             * 2 downoad the zip file stated in the api outlet
              */
             return new Promise((resolve, reject) => {
                 async.parallel({

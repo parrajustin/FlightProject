@@ -1,72 +1,215 @@
 {
     "Albuquerque": {
-        "west": -109
+        "west": -109,
+        "east": -102,
+        "south": 32,
+        "north": 36
     },
     "Anchorage": {
         "west": -151.5
     },
     "Atlanta": {
         "west": -88,
-        "north": 36.21667
+        "east": -82,
+        "south": 32,
+        "north": 36
     },
-    "Bethel": {},
-    "Billings": {},
+    "Bethel": {
+        "west": -173,
+        "south": 59.436463
+    },
+    "Billings": {
+        "west": -107,
+        "east": -101,
+        "south": 44.5,
+        "north": 49
+    },
     "Brownsville": {},
     "Cape_Lisburne": {},
-    "Charlotte": {},
-    "Cheyenne": {},
-    "Chicago": {},
-    "Cincinnati": {},
+    "Charlotte": {
+        "west": -82,
+        "east": -75,
+        "south": 32,
+        "north": 36
+    },
+    "Cheyenne": {
+        "west": -107,
+        "east": -101,
+        "north": 44.5,
+        "south": 40
+    },
+    "Chicago": {
+        "west": -93,
+        "east": -85,
+        "north": 44,
+        "south": 40
+    },
+    "Cincinnati": {
+        "west": -85,
+        "east": -79,
+        "south": 36,
+        "north": 40
+    },
     "Cold_Bay": {},
-    "Dallas_Ft_Worth": {},
+    "Dallas_Ft_Worth": {
+        "west": -102,
+        "east": -95,
+        "south": 32,
+        "north": 36
+    },
     "Dawson": {},
-    "Denver": {},
-    "Detroit": {},
+    "Denver": {
+        "west": -111,
+        "east": -104,
+        "south": 35.666667,
+        "north": 40
+    },
+    "Detroit": {
+        "east": -77,
+        "west": -85,
+        "north": 44,
+        "south": 40
+    },
     "Dutch_Harbor": {},
     "El_Paso": {},
     "Fairbanks": {},
-    "Great_Falls": {},
-    "Green_Bay": {},
-    "Halifax": {},
+    "Great_Falls": {
+        "west": -117,
+        "east": -107,
+        "south": 44.5,
+        "north": 49
+    },
+    "Green_Bay": {
+        "west": -93,
+        "east": -85,
+        "north": 48,
+        "south": 44
+    },
+    "Halifax": {
+        "north": 48,
+        "south": 44,
+        "east": -69,
+        "west": -61
+    },
     "Hawaiian_Islands": {},
     "Houston": {},
     "Jacksonville": {},
     "Juneau": {},
-    "Kansas_City": {},
+    "Kansas_City": {
+        "west": -97,
+        "east": -91,
+        "south": 36,
+        "north": 40
+    },
     "Ketchikan": {},
-    "Klamath_Falls": {},
+    "Klamath_Falls": {
+        "west": -125,
+        "east": -117,
+        "north": 44.5,
+        "south": 40
+    },
     "Kodiak": {},
-    "Lake_Huron": {},
-    "Las_Vegas": {},
-    "Los_Angeles": {},
+    "Lake_Huron": {
+        "east": -77,
+        "west": -85,
+        "south": 44,
+        "north": 48
+    },
+    "Las_Vegas": {
+        "west": -118,
+        "east": -111,
+        "south": 35.666667,
+        "north": 40
+    },
+    "Los_Angeles": {
+        "west": -121.5,
+        "east": -116,
+        "south": 32,
+        "north": 36
+    },
     "McGrath": {},
-    "Memphis": {},
+    "Memphis": {
+        "west": -95,
+        "east": -88,
+        "south": 32,
+        "north": 36
+    },
     "Miami": {},
-    "Montreal": {},
+    "Montreal": {
+        "west": -77,
+        "south": 44,
+        "east": -69,
+        "north": 48
+    },
     "New_Orleans": {},
-    "New_York": {},
+    "New_York": {
+        "west": -77,
+        "north": 44,
+        "east": -69,
+        "south": 40
+    },
     "Nome": {},
-    "Omaha": {},
-    "Phoenix": {},
+    "Omaha": {
+        "west": -101,
+        "east": -93,
+        "north": 44.5,
+        "south": 40
+    },
+    "Phoenix": {
+        "west": -116,
+        "east": -109,
+        "south": 32,
+        "north": 35.666667
+    },
     "Point_Barrow": {},
-    "Salt_Lake_City": {},
+    "Salt_Lake_City": {
+        "west": -117,
+        "east": -107,
+        "north": 44.5,
+        "south": 40
+    },
     "San_Antonio": {},
-    "San_Francisco": {},
-    "Seattle": {},
+    "San_Francisco": {
+        "west": -125,
+        "east": -118,
+        "south": 36,
+        "north": 40
+    },
+    "Seattle": {
+        "west": -125,
+        "east": -117,
+        "south": 44.5,
+        "north": 49
+    },
     "Seward": {},
     "St_Louis": {
-        "west": -91
+        "west": -91,
+        "east": -85,
+        "south": 36,
+        "north": 40
     },
     "Twin_Cities": {
         "west": -101,
-        "south": 44.5
+        "east": -93,
+        "south": 44.5,
+        "north": 49
     },
-    "Washington": {},
+    "Washington": {
+        "west": -79,
+        "east": -72,
+        "south": 36,
+        "north": 40
+    },
     "Western_Aleutian_Islands": {},
     "Whitehorse": {
         "west": -141
     },
-    "Wichita": {},
+    "Wichita": {
+        "west": -104,
+        "east": -97,
+        "south": 36,
+        "north": 40
+    },
     "Western_Aleutian_Islands_West_SEC_51.htm": {
         "west": 169.3667,
         "north": 53.16667,

@@ -4,59 +4,59 @@ const workers = workerFarm(require.resolve('./child'))
 // gdalwarp -te_srs epsg:4326 -te -109 3 -102 36.5 test2.tif test2_clipped.tif
 // gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te -104 36 -96.625570 40.300664 start.tif start_clipped.tif
 const locations = [
-    // 'Albuquerque',
+    'Albuquerque',
     // 'Anchorage',
-    // 'Atlanta',
+    'Atlanta',
     // 'Bethel',
-    // 'Billings',
+    'Billings', // fixed33
     // 'Brownsville',
     // 'Cape Lisburne',
-    // 'Charlotte',
-    // 'Cheyenne',
-    // 'Chicago',
-    // 'Cincinnati',
+    'Charlotte',
+    'Cheyenne', // fixed
+    'Chicago', // fixed
+    'Cincinnati',
     // 'Cold Bay',
-    // 'Dallas-Ft Worth',
+    'Dallas-Ft Worth',
     // 'Dawson',
-    // 'Denver',
-    // 'Detroit',
-    // /* test */ // 'Dutch Harbor',
+    'Denver',
+    'Detroit', // fixed
+    // 'Dutch Harbor',
     // 'El Paso',
     // 'Fairbanks',
-    // 'Great Falls',
-    // 'Green Bay',
-    // 'Halifax',
+    'Great Falls', // fixed
+    'Green Bay', // fixed
+    'Halifax', // fixed
     // /* test */ // 'Hawaiian Islands',
     // 'Houston',
     // 'Jacksonville',
     // 'Juneau',
-    // 'Kansas City',
+    'Kansas City',
     // 'Ketchikan',
-    // 'Klamath Falls',
+    'Klamath Falls',
     // 'Kodiak',
-    // 'Lake Huron',
-    // 'Las Vegas',
-    // 'Los Angeles',
+    'Lake Huron', // fixed
+    'Las Vegas',
+    'Los Angeles',
     // 'McGrath',
-    // 'Memphis',
+    'Memphis',
     // 'Miami',
-    // 'Montreal',
+    'Montreal', // fixed
     // 'New Orleans',
-    // 'New York',
+    'New York', // fixed
     // 'Nome',
-    // 'Omaha',
-    // 'Phoenix',
+    'Omaha', // fixed
+    'Phoenix',
     // 'Point Barrow',
-    // 'Salt Lake City',
+    'Salt Lake City', // fixed
     // 'San Antonio',
-    // 'San Francisco',
-    // 'Seattle',
-    'Seward',
+    'San Francisco',
+    'Seattle', // fixed
+    // 'Seward',
     'St Louis',
-    'Twin Cities',
+    'Twin Cities',  // fixed
     'Washington',
-    'Western Aleutian Islands',
-    'Whitehorse',
+    // 'Western Aleutian Islands',
+    // 'Whitehorse',
     'Wichita'
 ]
 
