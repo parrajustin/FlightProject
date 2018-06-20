@@ -19,12 +19,17 @@
         "south": 59.436463
     },
     "Billings": {
-        "west": -107,
+        "west": -109,
         "east": -101,
         "south": 44.5,
         "north": 49
     },
-    "Brownsville": {},
+    "Brownsville": {
+        "west": -103,
+        "east": -97,
+        "south": 24,
+        "north": 28
+    },
     "Cape_Lisburne": {},
     "Charlotte": {
         "west": -82,
@@ -33,7 +38,7 @@
         "north": 36
     },
     "Cheyenne": {
-        "west": -107,
+        "west": -109,
         "east": -101,
         "north": 44.5,
         "south": 40
@@ -71,11 +76,16 @@
         "south": 40
     },
     "Dutch_Harbor": {},
-    "El_Paso": {},
+    "El_Paso": {
+        "west": -109,
+        "east": -103,
+        "south": 28,
+        "north": 32
+    },
     "Fairbanks": {},
     "Great_Falls": {
         "west": -117,
-        "east": -107,
+        "east": -109,
         "south": 44.5,
         "north": 49
     },
@@ -88,12 +98,20 @@
     "Halifax": {
         "north": 48,
         "south": 44,
-        "east": -69,
-        "west": -61
+        "west": -69,
+        "east": -61
     },
     "Hawaiian_Islands": {},
-    "Houston": {},
-    "Jacksonville": {},
+    "Houston": {
+        "west": -97,
+        "east": -91,
+        "south": 28,
+        "north": 32
+    },
+    "Jacksonville": {
+        "west": -85,
+        "south": 28
+    },
     "Juneau": {},
     "Kansas_City": {
         "west": -97,
@@ -134,14 +152,24 @@
         "south": 32,
         "north": 36
     },
-    "Miami": {},
+    "Miami": {
+        "west": -83,
+        "east": -77,
+        "north": 28,
+        "south": 24
+    },
     "Montreal": {
         "west": -77,
         "south": 44,
         "east": -69,
         "north": 48
     },
-    "New_Orleans": {},
+    "New_Orleans": {
+        "west": -91,
+        "east": -85,
+        "south": 28,
+        "north": 32
+    },
     "New_York": {
         "west": -77,
         "north": 44,
@@ -164,11 +192,16 @@
     "Point_Barrow": {},
     "Salt_Lake_City": {
         "west": -117,
-        "east": -107,
+        "east": -109,
         "north": 44.5,
         "south": 40
     },
-    "San_Antonio": {},
+    "San_Antonio": {
+        "west": -103,
+        "east": -97,
+        "south": 28,
+        "north": 32
+    },
     "San_Francisco": {
         "west": -125,
         "east": -118,

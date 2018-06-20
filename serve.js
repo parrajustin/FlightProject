@@ -9,7 +9,7 @@ const locations = [
     'Atlanta',
     // 'Bethel',
     'Billings', // fixed33
-    // 'Brownsville',
+    'Brownsville',
     // 'Cape Lisburne',
     'Charlotte',
     'Cheyenne', // fixed
@@ -21,14 +21,14 @@ const locations = [
     'Denver',
     'Detroit', // fixed
     // 'Dutch Harbor',
-    // 'El Paso',
+    'El Paso',
     // 'Fairbanks',
     'Great Falls', // fixed
     'Green Bay', // fixed
     'Halifax', // fixed
     // /* test */ // 'Hawaiian Islands',
-    // 'Houston',
-    // 'Jacksonville',
+    'Houston',
+    'Jacksonville',
     // 'Juneau',
     'Kansas City',
     // 'Ketchikan',
@@ -39,16 +39,16 @@ const locations = [
     'Los Angeles',
     // 'McGrath',
     'Memphis',
-    // 'Miami',
+    'Miami',
     'Montreal', // fixed
-    // 'New Orleans',
+    'New Orleans',
     'New York', // fixed
     // 'Nome',
     'Omaha', // fixed
     'Phoenix',
     // 'Point Barrow',
     'Salt Lake City', // fixed
-    // 'San Antonio',
+    'San Antonio',
     'San Francisco',
     'Seattle', // fixed
     // 'Seward',
