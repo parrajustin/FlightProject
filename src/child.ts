@@ -5,33 +5,21 @@ import * as path from 'path';
 import * as querystring from "query-string";
 // const fs = require('fs');
 import * as async from 'async';
-import { isUndefined, map, filter, union, flatten } from 'lodash';
+import { map, filter, union, flatten } from 'lodash';
 import { MD5 } from 'object-hash';
 
-import { constructFileHashPromise, contructExecPromise, getNumber, removeFiles, unzipFile} from './utils';
+import { constructFileHashPromise, contructExecPromise, getNumber, removeFiles, unzipFile, UserError } from './utils';
 
 /**
  * The geo Data that contains the image bounds
  */
-const geoBoundData = require('./data.json') as object;
+const geoBoundData = require('../data.json') as object;
 /**
  * Hash of geo data
  */
 const geoBoundHash = MD5(geoBoundData);
 
-/**
- * Makes easier to see difference between my custom errors and the actual ones
- *
- * @class UserError
- * @extends {Error}
- */
-class UserError extends Error {
-    public isUser = true;
-
-    constructor(error: string) {
-        super(error);
-    }
-}
+const __root = path.join(__dirname, '..');
 
 
 /**
@@ -89,7 +77,7 @@ interface FileInfoJson {
     dataHash: string;
 
     /**
-     * hash of the downloaded files
+     * hash of the downloaded sectional file
      *
      * @type {string}
      * @memberof FileInfoJson
@@ -162,21 +150,6 @@ interface PromiseDataObject {
     skipToClip?: boolean;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function clipMaps(fileJson) {
 
 }
@@ -199,11 +172,11 @@ function correctMaps(fileFriendlyLocation: string, params: PromiseDataObject): P
             });
 
             async.map(metaDataFiles, (metaFile, callback) => {
-                const metaPath = path.join(__dirname, 'data', fileFriendlyLocation, metaFile);
+                const metaPath = path.join(__root, 'data', fileFriendlyLocation, metaFile);
 
                 const periodLocation = metaFile.indexOf('.');
                 const fileName = metaFile.substr(0, periodLocation);
-                const inImg = path.join(__dirname, 'data', fileFriendlyLocation, `${fileName}.tif`);
+                const inImg = path.join(__root, 'data', fileFriendlyLocation, `${fileName}.tif`);
 
                 jetpack.readAsync(metaPath).then(
                     (data: string) => {
@@ -258,8 +231,8 @@ function correctMaps(fileFriendlyLocation: string, params: PromiseDataObject): P
                             const clippedFile = `${fileName}.clipped.tif`;
                             const rgbFile = `${fileName}.rgb.tif`;
 
-                            const clippedOut = path.join(__dirname, 'data', fileFriendlyLocation, clippedFile);
-                            const rgbOut = path.join(__dirname, 'data', fileFriendlyLocation, rgbFile);
+                            const clippedOut = path.join(__root, 'data', fileFriendlyLocation, clippedFile);
+                            const rgbOut = path.join(__root, 'data', fileFriendlyLocation, rgbFile);
 
                             contructExecPromise(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te ${westNumber} ${southNumber} ${eastNumber} ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${clippedOut}"`).then(
                                 () => contructExecPromise(`gdal_translate -expand rgb "${clippedOut}" ${rgbOut}`)
@@ -275,8 +248,8 @@ function correctMaps(fileFriendlyLocation: string, params: PromiseDataObject): P
                                     const clippedFile = `${fileName}_west.clipped.tif`;
                                     const rgbFile = `${fileName}_west.rgb.tif`;
 
-                                    const clippedOut = path.join(__dirname, 'data', fileFriendlyLocation, clippedFile);
-                                    const rgbOut = path.join(__dirname, 'data', fileFriendlyLocation, rgbFile);
+                                    const clippedOut = path.join(__root, 'data', fileFriendlyLocation, clippedFile);
+                                    const rgbOut = path.join(__root, 'data', fileFriendlyLocation, rgbFile);
 
                                     contructExecPromise(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te ${westNumber} ${southNumber} 180 ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${clippedOut}"`).then(
                                         () => contructExecPromise(`gdal_translate -expand rgb "${clippedOut}" ${rgbOut}`)
@@ -290,8 +263,8 @@ function correctMaps(fileFriendlyLocation: string, params: PromiseDataObject): P
                                     const clippedFile = `${fileName}_east.clipped.tif`;
                                     const rgbFile = `${fileName}_east.rgb.tif`;
 
-                                    const clippedOut = path.join(__dirname, 'data', fileFriendlyLocation, clippedFile);
-                                    const rgbOut = path.join(__dirname, 'data', fileFriendlyLocation, rgbFile);
+                                    const clippedOut = path.join(__root, 'data', fileFriendlyLocation, clippedFile);
+                                    const rgbOut = path.join(__root, 'data', fileFriendlyLocation, rgbFile);
 
                                     contructExecPromise(`gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te -180 ${southNumber} ${eastNumber} ${northNumber} -tr ${horizontalResolution} ${verticalResolution} "${inImg}" "${clippedOut}"`).then(
                                         () => contructExecPromise(`gdal_translate -expand rgb "${clippedOut}" ${rgbOut}`)
@@ -334,7 +307,7 @@ function correctMaps(fileFriendlyLocation: string, params: PromiseDataObject): P
 
                     params.futureFileInfo.files = filesToBeKept;
 
-                    removeFiles(map(filesToDelete, (f: string) => path.join(__dirname, 'data', fileFriendlyLocation, f))).then(
+                    removeFiles(map(filesToDelete, (f: string) => path.join(__root, 'data', fileFriendlyLocation, f))).then(
                         () => resolve(params)
                     ).catch(
                         (reason) => reject(reason)
@@ -355,7 +328,7 @@ function correctMaps(fileFriendlyLocation: string, params: PromiseDataObject): P
  */
 function checkZipFile(fileFriendlyLocation: string, params: PromiseDataObject): Promise<PromiseDataObject> {
     return new Promise((resolve, reject) => {
-        const zipFile = path.join(__dirname, 'zip', params.zipName);
+        const zipFile = path.join(__root, 'zip', params.zipName);
 
         // get zip file hash
         constructFileHashPromise(zipFile).then(
@@ -363,8 +336,8 @@ function checkZipFile(fileFriendlyLocation: string, params: PromiseDataObject): 
                 if (hash === params.fileInfo.zipHash && params.fileInfo.boundHash === MD5(geoBoundData[fileFriendlyLocation])) {
                     // if the hash of the zip is the same, and the data is the same then we can skip the next steps till clipping
                     params.skipToClip = true;
-                    const zippedImages = path.join(__dirname, 'zip', `${fileFriendlyLocation}.images.zip`);
-                    const outPath = path.join(__dirname, 'data', fileFriendlyLocation);
+                    const zippedImages = path.join(__root, 'zip', `${fileFriendlyLocation}.images.zip`);
+                    const outPath = path.join(__root, 'data', fileFriendlyLocation);
 
                     unzipFile(zippedImages, outPath, 'htm', 'tif').then(
                         (files) => {
@@ -383,11 +356,11 @@ function checkZipFile(fileFriendlyLocation: string, params: PromiseDataObject): 
                     )
                 } else {
                     // some hash isn't the same so we have to go through the whole process
-                    const outPath = path.join(__dirname, 'data', fileFriendlyLocation);
-                    const filesToRemove = map(params.fileInfo.files, (f) => path.join(__dirname, 'data', fileFriendlyLocation, f));
+                    const outPath = path.join(__root, 'data', fileFriendlyLocation);
+                    const filesToRemove = map(params.fileInfo.files, (f) => path.join(__root, 'data', fileFriendlyLocation, f));
 
                     // also remove the saved zipped images if any
-                    filesToRemove.push(path.join(__dirname, 'zip', `${fileFriendlyLocation}.images.zip`));
+                    filesToRemove.push(path.join(__root, 'zip', `${fileFriendlyLocation}.images.zip`));
 
                     // remove old files than unzip the downloaded file
                     removeFiles(params.fileInfo.files).then(
@@ -425,7 +398,7 @@ function checkZipFile(fileFriendlyLocation: string, params: PromiseDataObject): 
 function downloadSectionalFile(fileFriendlyLocation: string, params: PromiseDataObject): Promise<string> {
     return new Promise((resolve, reject) => {
         const zipFile = params['sectionalInfo'].edition[0].product.url.split('/').pop().replace(new RegExp(/[- ]/, 'g'), '_');
-        const filePath = path.join(__dirname, 'zip', zipFile);
+        const filePath = path.join(__root, 'zip', zipFile);
         const writeStream = jetpack.createWriteStream(filePath);
 
         http.get(params['sectionalInfo'].edition[0].product.url, (res) => {
@@ -468,7 +441,7 @@ function downloadSectionalFile(fileFriendlyLocation: string, params: PromiseData
  */
 function checkIfFileVersionIsCurrent(fileFriendlyLocation: string, sectionalInfoJson: SectionalInfoJson): Promise<PromiseDataObject> {
     return new Promise((resolve, reject) => {
-        const savedFileInfo = path.join(__dirname, 'data', fileFriendlyLocation, 'file.json');
+        const savedFileInfo = path.join(__root, 'data', fileFriendlyLocation, 'file.json');
         const apiVersion = sectionalInfoJson.edition[0].editionNumber;
 
         jetpack.readAsync(savedFileInfo, 'json').then(
@@ -537,7 +510,7 @@ module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: E
     const fileFriendlyLocation = loc.replace(new RegExp(/[- ]/, 'g'), '_');
 
     // first make sure the directory in the data folder exists
-    jetpack.dirAsync(path.join(__dirname, 'data', fileFriendlyLocation)).then(
+    jetpack.dirAsync(path.join(__root, 'data', fileFriendlyLocation)).then(
         () => constructApiGetInfo(loc) // now get the vfr sectional chart info from the faa api
     ).then(
         (sectionalInfoJson) => checkIfFileVersionIsCurrent(fileFriendlyLocation, sectionalInfoJson) // check if the current files are current with the info from the sectional chart api, if they aren't current delete all old files
@@ -551,7 +524,7 @@ module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: E
             return new Promise((resolve, reject) => {
                 async.parallel({
                     write: (callback) => {
-                        jetpack.writeAsync(path.join(__dirname, 'data', fileFriendlyLocation, 'api.json'), params.sectionalInfo).then(
+                        jetpack.writeAsync(path.join(__root, 'data', fileFriendlyLocation, 'api.json'), params.sectionalInfo).then(
                             () => callback(null)
                         ).catch(
                             (reason) => reject(reason)
@@ -584,13 +557,13 @@ module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: E
                 async.parallel({
                     removeFile: (callback) => {
                         // remove the unecessary zip file
-                        removeFiles([path.join(__dirname, 'zip', params.zipName)]).then(
+                        removeFiles([path.join(__root, 'zip', params.zipName)]).then(
                             () => callback(null)
                         ).catch(
                             (reason) => {
                                 callback(reason)
                             }
-                        )
+                        );
                     },
                     reproject: (callback) => {
                         // correct the maps by clipping and reprojecting them
@@ -611,14 +584,12 @@ module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: E
         }
     ).then(
         (params) => {
-            // jetpack.writeAsync(path.join(__dirname, 'data', fileFriendlyLocation, 'file.json'), fileJson)
+            // jetpack.writeAsync(path.join(__root, 'data', fileFriendlyLocation, 'file.json'), fileJson)
             console.log(params);
         }
     ).then(
         () => WorkerCallback(null, 'Successfully updated!')
     ).catch(
-        (reason) => {
-            WorkerCallback(reason);
-        }
+        (reason) => WorkerCallback(reason)
     )
 }

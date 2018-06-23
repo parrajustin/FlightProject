@@ -1,10 +1,11 @@
 {
-  "name": "Albuquerque_101",
+  "name": "flight-universal-preprocessor",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node master.js",
+    "start": "npm run build && node dist/master.js",
+    "build": "tsc",
     "serve": "http-server map/"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "@types/object-hash": "^1.2.0",
     "@types/query-string": "^6.1.0",
     "codelyzer": "^4.3.0",
-    "tslint": "^5.10.0"
+    "tslint": "^5.10.0",
+    "typescript": "^2.9.2"
   }
 }

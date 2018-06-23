@@ -1,12 +1,13 @@
-const workerFarm = require('worker-farm');
+import * as workerFarm from 'worker-farm';
+import { map } from 'lodash';
 // const {exec} = require('child_process');
 // const path = require('path');
 // const os = require('os');
 // const cpuCount = os.cpus().length;
 
-const maxZoom = 10;
+const maxZoom = 12;
 const workers = workerFarm(require.resolve('./child'));
-// const tileWorkers = workerFarm(require.resolve('./tile'));
+const tileWorkers = workerFarm(require.resolve('./tileWin'));
 
 // gdalwarp -te_srs epsg:4326 -te -109 3 -102 36.5 test2.tif test2_clipped.tif
 // gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te -104 36 -96.625570 40.300664 start.tif start_clipped.tif
@@ -67,10 +68,10 @@ const locations = [
     'Wichita',
 ];
 
-let indexs = Array<Number>(locations.length).map(Number.call, Number);
+let indexs = map(Array(locations.length), (_, index) => index);
 let finished = 0;
 
-const zoomArray = Array<Number>(maxZoom + 1).map(Number.call, Number);
+const zoomArray = map(Array(maxZoom + 1), (_, index) => index);
 zoomArray.reverse();
 
 // let finishedZoom = 0;

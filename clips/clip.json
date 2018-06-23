@@ -1,0 +1,15 @@
+{
+    "Washington": [
+        "clipW_DC.shp"
+    ],
+    "New_Orleans": [
+        "clipNew.shp"
+    ],
+    "Los_Angeles": [
+        "clipLA.shp"
+    ],
+    "Jacksonville": [
+        "clipJackson_B.shp",
+        "clipJackson_A.shp"
+    ]
+}
