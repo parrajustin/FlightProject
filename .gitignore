@@ -3,3 +3,5 @@
 /output
 *.tif
 *.py
+/map
+/zip

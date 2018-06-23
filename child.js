@@ -8,11 +8,19 @@ const unzip = require('node-unzip-2');
 const async = require('async');
 const { exec } = require('child_process');
 const _ = require('lodash');
-const geoBoundData = require('./data.json');
-// const gdal = require("gdal");
+const hash = require('object-hash');
 
+const geoBoundData = require('./data.json');
+const geoBoundHash = hash(geoBoundData);
 const numCheck = new RegExp(/[-\d.]/);
 
+
+/**
+ * Wraps the nodejs exec in a promise
+ *
+ * @param {*} command command to execute
+ * @returns promise
+ */
 function contructExecPromise(command) {
     return new Promise((resolve, reject) => {
         exec(command, (err) => {
@@ -22,6 +30,16 @@ function contructExecPromise(command) {
                 resolve();
             }
         });
+    });
+}
+
+function constructFileHashPromise(file) {
+    return new Promise((resolve) => {
+        md5File(file, (err, hash) => {
+            if (err) throw err
+
+            resolve(hash);
+        })
     });
 }
 
@@ -64,6 +82,10 @@ function getNumber(string, start) {
     return parseFloat(num, 10);
 }
 
+function clipMaps(fileJson) {
+
+}
+
 
 /**
  * Gdalwarp the outputed maps by using boudnaries declared in the metadata or those hand defined in the data.json
@@ -88,7 +110,9 @@ function correctMaps(fileFriendlyLocation, fileJson) {
 
             jetpack.readAsync(metaPath).then(
                 (data) => {
-                    const innerbody = data.match(new RegExp(/<body>(.*)<\/body>/s))[1].replace(new RegExp('\r\n', 'g'), '').replace(new RegExp(' ', 'g'), '');
+                    const innerbody = data.match(
+                        new RegExp(/<body>(.*)<\/body>/s)
+                    )[1].replace(new RegExp('\r\n', 'g'), '').replace(new RegExp(' ', 'g'), '');
 
                     /* GET THE PIZEL SIZES OF THE IMAGE */
                     let horizontalResolution = 0;
@@ -114,12 +138,12 @@ function correctMaps(fileFriendlyLocation, fileJson) {
                     const eastBound = 'East_Bounding_Coordinate:</em>';
                     const southBound = 'South_Bounding_Coordinate:</em>';
                     const northBound = 'North_Bounding_Coordinate:</em>';
-            
+
                     let westIndex = innerbody.indexOf(westBound);
                     let eastIndex = innerbody.indexOf(eastBound, westIndex);
                     let southIndex = innerbody.indexOf(southBound, westIndex);
                     let northIndex = innerbody.indexOf(northBound, westIndex);
-            
+
                     const subString = innerbody.substr(westIndex, (Math.max(westIndex, eastIndex, southIndex, northIndex) - Math.min(westIndex, eastIndex, southIndex, northIndex)) * 2);
                     westIndex = subString.indexOf(westBound);
                     eastIndex = subString.indexOf(eastBound, westIndex);
@@ -131,7 +155,7 @@ function correctMaps(fileFriendlyLocation, fileJson) {
                     const southNumber = (geoBoundData[metaDataFiles.length === 1 ? fileFriendlyLocation : metaFile] || {})['south'] || Math.ceil(getNumber(subString, southIndex + southBound.length));
                     const northNumber = (geoBoundData[metaDataFiles.length === 1 ? fileFriendlyLocation : metaFile] || {})['north'] || getNumber(subString, northIndex + northBound.length);
                     /* END LAT/LONG BOUNDS */
-            
+
                     // if the image goes over the 180 degree divide line split it into 2 in the else section
                     if (westNumber < eastNumber) {
                         const clippedFile = `${fileName}.clipped.tif`;
@@ -145,7 +169,7 @@ function correctMaps(fileFriendlyLocation, fileJson) {
                         ).then(
                             () => callback(null, [clippedFile, rgbFile])
                         ).catch(
-                            (err) => callback(err) 
+                            (err) => callback(err)
                         );
                     } else {
                         async.parallel([
@@ -162,7 +186,7 @@ function correctMaps(fileFriendlyLocation, fileJson) {
                                 ).then(
                                     () => innerCallback(null, [clippedFile, rgbFile])
                                 ).catch(
-                                    (err) => innerCallback(err) 
+                                    (err) => innerCallback(err)
                                 );
                             }, (innerCallback) => {
                                 // handle negative side
@@ -177,7 +201,7 @@ function correctMaps(fileFriendlyLocation, fileJson) {
                                 ).then(
                                     () => innerCallback(null, [clippedFile, rgbFile])
                                 ).catch(
-                                    (err) => innerCallback(err) 
+                                    (err) => innerCallback(err)
                                 );
                             }
                         ], (err, results) => {
@@ -225,21 +249,24 @@ function correctMaps(fileFriendlyLocation, fileJson) {
 
 function unzipSectionalFile(fileFriendlyLocation, zipFileName, sectionalInfoJson) {
     return new Promise((resolve, _) => {
-        const zipPath = path.join(__dirname, 'data', fileFriendlyLocation, zipFileName);
+        const zipPath = path.join(__dirname, 'zip', zipFileName);
         const outputData = {
             version: sectionalInfoJson["edition"][0]["editionNumber"],
+            dataHash: geoBoundHash,
+            zipHash: '',
+            boundHahs: '',
             files: []
-        }
-    
+        };
+
         jetpack.createReadStream(zipPath)
             .pipe(unzip.Parse())
             .on('entry', function (entry) {
                 const fileName = entry.path.replace(new RegExp(/[- ]/, 'g'), '_');
                 const name = fileName.split(".");
-    
+
                 if (name[name.length - 1] === "tif" || name[name.length - 1] === "htm") {
                     const outputFilePath = path.join(__dirname, 'data', fileFriendlyLocation, fileName);
-    
+
                     outputData.files.push(fileName);
                     entry.pipe(jetpack.createWriteStream(outputFilePath));
                 } else {
@@ -251,22 +278,41 @@ function unzipSectionalFile(fileFriendlyLocation, zipFileName, sectionalInfoJson
                     zipFileName: zipFileName,
                     fileJson: outputData
                 });
-                // const outputFilePath = path.join(__dirname, 'data', fileFriendlyLocation, 'file.json');
-
-                // correctMaps(locationName, outputData, () => {
-                //     jetpack.writeAsync(outputFilePath, outputData).then(
-                //         (_) => {
-                //             callback(null, {
-                //                 success: true,
-                //                 message: 'complete'
-                //             });
-                //         }
-                //     );
-                // });
-    
-                    // }
-                // );
             });
+    });
+}
+
+
+/**
+ * Check if the downloaded zip has the same hash as the one stored in the directories file.json, 
+ *
+ * @param {*} fileFriendlyLocation the location in the data folder where the files is saved
+ * @param {*} params information from other methods
+ * @returns promise
+ */
+function checkZipFile(fileFriendlyLocation, params) {
+    return new Promise((resolve, reject) => {
+        const zipFile = path.join(__dirname, 'zip', params['zipName']);
+
+        // get zip file hash
+        constructFileHashPromise(zipFile).then(
+            (hash) => {
+                if (hash === params['fileInfo']['zipHash'] && params['fileInfo']['boundHash'] === objectHash(geoBoundData[fileFriendlyLocation])) {
+                    // if the hash of the zip is the same, and the data is the same then we can skip the next steps till clipping
+                    params['skipToClip'] = true;
+                    resolve(params);
+                } else {
+                    // some hash isn't the same so we have to go through the whole process
+
+                    // unzip the downloaded file
+                    unzipSectionalFile(fileFriendlyLocation, dataObject['zipName'], params['sectionalInfo']).then(
+
+                    )
+                }
+            }
+        ).catch(
+            (reason) => reject(reason)
+        );
     });
 }
 
@@ -274,16 +320,16 @@ function unzipSectionalFile(fileFriendlyLocation, zipFileName, sectionalInfoJson
  * Download the vfr sectional file from the api source
  *
  * @param {*} fileFriendlyLocation the location in the data folder where the files will be saved
- * @param {*} sectionalInfoJson the chart info from the api source
- * @returns promise the resolves with the file zip name
+ * @param {*} param previous promise data info
+ * @returns promise the resolves with the previous param
  */
-function downloadSectionalFile(fileFriendlyLocation, sectionalInfoJson) {
+function downloadSectionalFile(fileFriendlyLocation, params) {
     return new Promise((resolve, reject) => {
-        const zipFile = sectionalInfoJson.edition[0].product.url.split('/').pop().replace(new RegExp(/[- ]/, 'g'), '_');
-        const filePath = path.join(__dirname, 'data', fileFriendlyLocation, zipFile);
+        const zipFile = params['sectionalInfo'].edition[0].product.url.split('/').pop().replace(new RegExp(/[- ]/, 'g'), '_');
+        const filePath = path.join(__dirname, 'zip', zipFile);
         const writeStream = jetpack.createWriteStream(filePath);
 
-        http.get(sectionalInfoJson.edition[0].product.url, (res) => {
+        http.get(params['sectionalInfo'].edition[0].product.url, (res) => {
             const len = parseInt(res.headers['content-length'], 10);
             const total = len / 1048576;
             let current = 0;
@@ -313,89 +359,6 @@ function downloadSectionalFile(fileFriendlyLocation, sectionalInfoJson) {
         });
     });
 }
-
-// function downloadAndUpdateFiles(locationName, json, callback) {
-//     const fileFriendlyLocation = locationName.replace(new RegExp('-', 'g'), '_').replace(new RegExp(' ', 'g'), '_');
-//     jetpack.writeAsync(path.join(__dirname, 'data', fileFriendlyLocation, 'api.json'), json).then(
-//         (value) => {
-//             const file = path.join(__dirname, 'data', fileFriendlyLocation, json.edition[0].product.url.split('/')[json.edition[0].product.url.split('/').length - 1])
-//             const writeStream = jetpack.createWriteStream(file);
-
-//             http.get(json.edition[0].product.url, (innerResponse) => {
-//                 const len = parseInt(innerResponse.headers['content-length'], 10);
-//                 const total = len / 1048576;
-//                 let current = 0;
-//                 let checkpoint = 10;
-
-//                 innerResponse.pipe(writeStream);
-
-//                 innerResponse.on('data', (chunk) => {
-//                     current += chunk.length;
-
-//                     progress = (100.0 * current / len).toFixed(2);
-//                     if (progress >= checkpoint) {
-//                         console.log(`${locationName}: ${progress}% total ${total}MB`);
-//                         checkpoint += 10;
-//                     }
-//                 });
-
-//                 innerResponse.on('end', (_) => {
-
-//                     if (innerResponse.statusCode === 200) {
-//                         const outputData = {
-//                             version: json["edition"][0]["editionNumber"],
-//                             files: []
-//                         }
-
-//                         fs.createReadStream(file)
-//                             .pipe(unzip.Parse())
-//                             .on('entry', function (entry) {
-//                                 const fileName = entry.path.replace(new RegExp(/[- ]/, 'g'), '_');
-//                                 const name = fileName.split(".");
-//                                 // const type = entry.type; // 'Directory' or 'File'
-//                                 // const size = entry.size;
-
-//                                 if (name[name.length - 1] === "tif" || name[name.length - 1] === "htm") {
-//                                     const outputFilePath = path.join(__dirname, 'data', fileFriendlyLocation, fileName);
-
-//                                     outputData.files.push(fileName);
-//                                     entry.pipe(jetpack.createWriteStream(outputFilePath));
-//                                 } else {
-//                                     entry.autodrain();
-//                                 }
-//                             })
-//                             .on('close', function () {
-//                                 const outputFilePath = path.join(__dirname, 'data', fileFriendlyLocation, 'file.json');
-
-//                                 // jetpack.removeAsync(file).then(
-//                                 //     (_) => {
-                            
-//                                 correctMaps(locationName, outputData, () => {
-//                                     jetpack.writeAsync(outputFilePath, outputData).then(
-//                                         (_) => {
-//                                             callback(null, {
-//                                                 success: true,
-//                                                 message: 'complete'
-//                                             });
-//                                         }
-//                                     );
-//                                 });
-
-//                                     // }
-//                                 // );
-//                             });
-//                     } else {
-//                         callback(`${locationName} Sectional chart retrieve failed; ${res.statusCode}:${res.statusMessage}`, null);
-//                     }
-//                 });
-
-//             }).on('error', (e) => {
-//                 callback(e, null);
-//             });
-//         }
-//     );
-// }
-
 
 /**
  * Remove all the old files stated in the fileJson
@@ -432,28 +395,27 @@ function removeOldFiles(fileFriendlyLocation, fileJson) {
 /**
  * Check if the current files in the data folder are current, if not delete old files
  *
- * @param {*} fileFriendlyLocation the location in the data folder
+ * @param {*} fileFriendlyLocation the location in the da   ta folder
  * @param {*} sectionalInfoJson api result from the vfr sectional api call
  * @returns promise which resolves with the sectionalInfoJson 
  */
 function checkIfFileVersionIsCurrent(fileFriendlyLocation, sectionalInfoJson) {
     return new Promise((resolve, reject) => {
         const apiJsonParams = path.join(__dirname, 'data', fileFriendlyLocation, 'file.json');
-    
         const apiVersion = sectionalInfoJson["edition"][0]["editionNumber"];
-    
+
         jetpack.readAsync(apiJsonParams, 'json').then(
             (fileJson) => {
+                fileJson = fileJson || {};
+
                 const currentVersion = (fileJson || { version: -1 })["version"];
-    
-                if (currentVersion === apiVersion) {
+                const currentDataHash = (fileJson || { dataHash: '' })['dataHash'];
+                const zipFileHash = (fileJson || { zipHash: '' })['zipHash'];
+
+                if (currentVersion === apiVersion && currentDataHash === geoBoundHash) {
                     reject(userError('Map(s) are already current'));
                 } else {
-                    removeOldFiles(fileFriendlyLocation, fileJson).then(
-                        () => resolve(sectionalInfoJson)
-                    ).catch(
-                        (reason) => reject(reason)
-                    )
+                    resolve({ sectionalInfo: sectionalInfoJson, fileInfo: fileJson });
                 }
             }
         ).catch(
@@ -472,7 +434,7 @@ function checkIfFileVersionIsCurrent(fileFriendlyLocation, sectionalInfoJson) {
 function constructApiGetInfo(apiOutlet) {
     return new Promise((resolve, reject) => {
         const result = querystring.stringify({ geoname: apiOutlet, edition: 'current', format: 'tiff' });
-    
+
         const options = {
             hostname: 'soa.smext.faa.gov',
             path: `/apra/vfr/sectional/chart?${result}`,
@@ -482,24 +444,24 @@ function constructApiGetInfo(apiOutlet) {
                 'content-type': 'application/json'
             }
         };
-    
+
         https.get(options, (res) => {
-    
             let json = '';
+
             res.on('data', (chunk) => {
                 json += chunk;
             });
-    
+
             res.on('end', () => {
                 let data = JSON.parse(json);
-    
+
                 if (res.statusCode === 200) {
                     resolve(data);
                 } else {
                     reject(userError('Failed to retrieve api sectional data'));
-                } 
+                }
             });
-    
+
         }).on('error', (e) => {
             reject(e);
         });
@@ -508,14 +470,14 @@ function constructApiGetInfo(apiOutlet) {
 
 module.exports = function sectionalPipeline(loc, WorkerCallback) {
     const fileFriendlyLocation = loc.replace(new RegExp(/[- ]/, 'g'), '_');
-    
+
     // first make sure the directory in the data folder exists
     jetpack.dirAsync(path.join(__dirname, 'data', fileFriendlyLocation)).then(
         () => constructApiGetInfo(loc) // now get the vfr sectional chart info from the faa api
     ).then(
         (sectionalInfoJson) => checkIfFileVersionIsCurrent(fileFriendlyLocation, sectionalInfoJson) // check if the current files are current with the info from the sectional chart api, if they aren't current delete all old files
     ).then(
-        (sectionalInfoJson) => {
+        (params) => {
             /**
              * In Paralleld do the following
              * 1 save the info from the api into a file to be check against
@@ -524,31 +486,33 @@ module.exports = function sectionalPipeline(loc, WorkerCallback) {
             return new Promise((resolve, reject) => {
                 async.parallel({
                     write: (callback) => {
-                        jetpack.writeAsync(path.join(__dirname, 'data', fileFriendlyLocation, 'api.json'), sectionalInfoJson).then(
+                        jetpack.writeAsync(path.join(__dirname, 'data', fileFriendlyLocation, 'api.json'), params['sectionalInfo']).then(
                             () => callback(null)
                         ).catch(
                             (reason) => reject(reason)
                         );
                     },
                     download: (callback) => {
-                        downloadSectionalFile(fileFriendlyLocation, sectionalInfoJson).then(
-                            (data) => callback(null, data)
+                        downloadSectionalFile(fileFriendlyLocation, params).then(
+                            (zipName) => callback(null, zipName)
                         );
                     }
                 }, (err, results) => {
                     if (err) {
                         reject(err);
                     } else {
-                        resolve({
-                            apiInfo: sectionalInfoJson,
-                            zipName: results['download']
-                        });
+                        let temp = { zipName: results['download'] };
+                        resolve({ ...params, ...temp });
+                        // resolve({
+                        //     apiInfo: params,
+                        //     zipName: results['download']
+                        // });
                     }
                 });
             });
         }
     ).then(
-        (dataObject) => unzipSectionalFile(fileFriendlyLocation, dataObject['zipName'], dataObject['apiInfo']) // unzip the downloaded file
+        (dataObject) => 
     ).then(
         (params) => {
             return new Promise((resolve, reject) => {

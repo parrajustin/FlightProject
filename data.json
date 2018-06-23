@@ -92,7 +92,7 @@
     "Green_Bay": {
         "west": -93,
         "east": -85,
-        "north": 48,
+        "north": 48.33333,
         "south": 44
     },
     "Halifax": {
@@ -110,7 +110,9 @@
     },
     "Jacksonville": {
         "west": -85,
-        "south": 28
+        "south": 28,
+        "north": 32,
+        "east": -76.66667
     },
     "Juneau": {},
     "Kansas_City": {
@@ -140,7 +142,7 @@
         "north": 40
     },
     "Los_Angeles": {
-        "west": -121.5,
+        "west": -122,
         "east": -116,
         "south": 32,
         "north": 36
@@ -186,7 +188,7 @@
     "Phoenix": {
         "west": -116,
         "east": -109,
-        "south": 32,
+        "south": 31.33333,
         "north": 35.666667
     },
     "Point_Barrow": {},

@@ -3,11 +3,29 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "node master.js",
+    "serve": "http-server map/"
+  },
   "dependencies": {
     "async": "^2.6.1",
     "fs-jetpack": "^1.3.0",
+    "http-server": "^0.11.1",
     "lodash": "^4.17.10",
+    "md5": "^2.2.1",
     "node-unzip-2": "^0.2.7",
+    "object-hash": "^1.3.0",
+    "query-string": "^6.1.0",
     "worker-farm": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/async": "^2.0.49",
+    "@types/lodash": "^4.14.110",
+    "@types/md5": "^2.1.32",
+    "@types/node": "^10.3.5",
+    "@types/object-hash": "^1.2.0",
+    "@types/query-string": "^6.1.0",
+    "codelyzer": "^4.3.0",
+    "tslint": "^5.10.0"
   }
 }
