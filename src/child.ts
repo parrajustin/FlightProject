@@ -5,10 +5,11 @@ import * as path from 'path';
 import * as querystring from "query-string";
 // const fs = require('fs');
 import * as async from 'async';
-import { map, filter, union, flatten } from 'lodash';
+import { map, filter, union, flatten, isUndefined } from 'lodash';
 import { MD5 } from 'object-hash';
 
-import { constructFileHashPromise, contructExecPromise, getNumber, removeFiles, unzipFile, UserError } from './utils';
+import { constructFileHashPromise, contructExecPromise, getNumber, removeFiles, unzipFile, UserError, zipFile } from './utils';
+import { exec } from 'child_process';
 
 /**
  * The geo Data that contains the image bounds
@@ -150,8 +151,138 @@ interface PromiseDataObject {
     skipToClip?: boolean;
 }
 
-function clipMaps(fileJson) {
+function cleanUp(fileFriendlyLocation: string, params: PromiseDataObject): Promise<PromiseDataObject> {
+    console.log(params);
 
+    return new Promise((resolve, reject) => {
+        const from = path.join(__root, 'data', fileFriendlyLocation, params.futureFileInfo.files[0]);
+        const to = path.join(__root, 'data', fileFriendlyLocation, `${fileFriendlyLocation}.final.tif`);
+
+        jetpack.copyAsync(from, to).then(
+            () => jetpack.inspectTreeAsync(path.join(__root, 'data', fileFriendlyLocation))
+        ).then(
+            (files) => {
+                const fileNames = map(files.children, (f) => f.name);
+                const filesToDelete = filter(fileNames, (f) => f !== 'api.json' && f !== `${fileFriendlyLocation}.final.tif`);
+
+                params.futureFileInfo.files = [];
+                params.futureFileInfo.files.push(`${fileFriendlyLocation}.final.tif`);
+
+                return removeFiles(map(filesToDelete, (f: string) => path.join(__root, 'data', fileFriendlyLocation, f)));
+            }
+        ).then(
+            () => resolve(params)
+        ).catch(
+            (reason) => reject(reason)
+        )
+    });
+}
+
+/**
+ * recursivley clips an image using the clips in the clip folder
+ *
+ * @param {string[]} FilesToClip the files that need to be clipped
+ * @param {string} outPath where to output the clipped images
+ * @param {string} currentImage image to clip with clipping
+ * @param {string[]} images images that have been clipped
+ * @returns {Promise<string[]>} promise resolves when all clips have been run
+ */
+function clipUtility(FilesToClip: string[], outPath: string, currentImage: string, images: string[]): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+        const imageToClip = FilesToClip.pop();
+        const outImage = path.join(outPath, `${imageToClip}.tif`);
+        const clipPath = path.join(__root, 'clips', imageToClip);
+
+        exec(`gdalwarp -cutline "${clipPath}" "${currentImage}" "${outImage}"`, (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+            } else {
+                images.push(`${imageToClip}.tif`);
+
+                if (FilesToClip.length > 0) {
+                    clipUtility(FilesToClip, outPath, outImage, images).then(
+                        (totalImages) => resolve(totalImages)
+                    ).catch(
+                        (reason) => reject(reason)
+                    );
+                } else {
+                    resolve(images);
+                }
+            }
+        });
+    });
+}
+
+
+/**
+ * Runs the pipeline through a clipping and zipping procedure where the main files are zipped and the rest should be left
+ *
+ * @param {string} fileFriendlyLocation where the data is in the data directory 
+ * @param {PromiseDataObject} params Promise pipeline data 
+ * @returns {Promise<PromiseDataObject>} resolves when images have been clipped and copies zipped
+ */
+function clipMaps(fileFriendlyLocation: string, params: PromiseDataObject): Promise<PromiseDataObject> {
+    return new Promise((resolve, reject) => {
+        jetpack.readAsync(path.join(__root, 'clips', 'clip.json'), 'json').then(
+            (clips: {}) => {
+                if (!isUndefined(clips[fileFriendlyLocation])) {
+                    // there are clips for this 
+
+                    clipUtility(
+                        clips[fileFriendlyLocation],
+                        path.join(__root, 'data', fileFriendlyLocation),
+                        path.join(__root, 'data', fileFriendlyLocation, filter(params.futureFileInfo.files, (f) => f.indexOf('.rgb.tif') !== -1)[0]),
+                        []
+                    ).then(
+                        (files) => {
+                            const final = files.pop();
+
+                            removeFiles(map(files, (f: string) => path.join(__root, 'data', fileFriendlyLocation, f))).then(
+                                () => {
+                                    const filePath = path.join(__root, 'data', fileFriendlyLocation);
+                                    const zippedImages = path.join(__root, 'zip', `${fileFriendlyLocation}.images.zip`);
+
+                                    return zipFile(filePath, params.futureFileInfo.files, zippedImages);
+                                }
+                            ).then(
+                                () => {
+                                    params.futureFileInfo.files = [];
+                                    params.futureFileInfo.files.push(final);
+
+                                    resolve(params);
+                                }
+                            ).catch(
+                                (reason) => reject(reason)
+                            );
+                        }
+                    ).catch(
+                        (reason) => reject(reason)
+                    );
+                } else {
+                    // there is no clipping needed to be done
+
+                    const filePath = path.join(__root, 'data', fileFriendlyLocation);
+                    const zippedImages = path.join(__root, 'zip', `${fileFriendlyLocation}.images.zip`);
+
+                    zipFile(filePath, params.futureFileInfo.files, zippedImages).then(
+                        () => {
+                            const image = filter(params.futureFileInfo.files, (f) => f.indexOf('.rgb.tif') !== -1)[0];
+
+                            params.futureFileInfo.files = [];
+                            params.futureFileInfo.files.push(image);
+
+                            resolve(params);
+                        }
+                    ).catch(
+                        (reason) => reject(reason)
+                    )
+
+                }
+            }
+        ).catch(
+            (reason) => reject(reason)
+        );
+    });
 }
 
 /**
@@ -507,7 +638,7 @@ function constructApiGetInfo(apiOutlet: string): Promise<SectionalInfoJson> {
 }
 
 module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: Error | string, message?: string) => void) {
-    const fileFriendlyLocation = loc.replace(new RegExp(/[- ]/, 'g'), '_');
+    const fileFriendlyLocation = loc.replace(new RegExp(/[- ]/, 'g'), '_').trim();
 
     // first make sure the directory in the data folder exists
     jetpack.dirAsync(path.join(__root, 'data', fileFriendlyLocation)).then(
@@ -552,7 +683,7 @@ module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: E
     ).then(
         (dataObject) => checkZipFile(fileFriendlyLocation, dataObject)
     ).then(
-        (params) => {
+        (params): Promise<PromiseDataObject> => {
             return new Promise((resolve, reject) => {
                 async.parallel({
                     removeFile: (callback) => {
@@ -568,7 +699,7 @@ module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: E
                     reproject: (callback) => {
                         // correct the maps by clipping and reprojecting them
                         correctMaps(fileFriendlyLocation, params).then(
-                            (fileJson) => callback(null, fileJson)
+                            () => callback(null)
                         ).catch(
                             (reason) => callback(reason)
                         )
@@ -577,16 +708,17 @@ module.exports = function sectionalPipeline(loc: string, WorkerCallback: (err: E
                     if (err) {
                         reject(err);
                     } else {
-                        resolve(results['reproject']);
+                        resolve(params);
                     }
                 });
             });
         }
     ).then(
-        (params) => {
-            // jetpack.writeAsync(path.join(__root, 'data', fileFriendlyLocation, 'file.json'), fileJson)
-            console.log(params);
-        }
+        (params) => clipMaps(fileFriendlyLocation, params)
+    ).then(
+        (params) => cleanUp(fileFriendlyLocation, params)
+    ).then(
+        (params) => jetpack.writeAsync(path.join(__root, 'data', fileFriendlyLocation, 'file.json'), params.futureFileInfo)
     ).then(
         () => WorkerCallback(null, 'Successfully updated!')
     ).catch(

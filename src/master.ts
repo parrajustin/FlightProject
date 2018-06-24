@@ -7,7 +7,7 @@ import { map } from 'lodash';
 
 const maxZoom = 12;
 const workers = workerFarm(require.resolve('./child'));
-const tileWorkers = workerFarm(require.resolve('./tileWin'));
+const tileWorkers = workerFarm(require.resolve('./tile'));
 
 // gdalwarp -te_srs epsg:4326 -te -109 3 -102 36.5 test2.tif test2_clipped.tif
 // gdalwarp -t_srs epsg:3857 -te_srs epsg:4326 -te -104 36 -96.625570 40.300664 start.tif start_clipped.tif
@@ -35,8 +35,8 @@ const locations = [
     // 'Green Bay', // fixed
     // 'Halifax', // fixed
     // // /* test */ // 'Hawaiian Islands',
-    // 'Houston',
-    // 'Jacksonville',
+    'Houston',
+    'Jacksonville',
     // // 'Juneau',
     // 'Kansas City',
     // // 'Ketchikan',
@@ -62,10 +62,10 @@ const locations = [
     // // 'Seward',
     // 'St Louis',
     // 'Twin Cities', // fixed
-    // 'Washington',
+    'Washington',
     // // 'Western Aleutian Islands',
     // // 'Whitehorse',
-    'Wichita',
+    // 'Wichita',
 ];
 
 let indexs = map(Array(locations.length), (_, index) => index);
@@ -147,7 +147,7 @@ function createWorker() {
         const temp = indexs.pop();
         workers(locations[temp], function(err, message) {
             if (err && (!err.isUser === true)) {
-                throw err;
+                console.error(err);
                 createWorker();
             } else if (err) {
                 console.log(`${locations[temp]}: ${err}`);
