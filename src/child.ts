@@ -152,8 +152,6 @@ interface PromiseDataObject {
 }
 
 function cleanUp(fileFriendlyLocation: string, params: PromiseDataObject): Promise<PromiseDataObject> {
-    console.log(params);
-
     return new Promise((resolve, reject) => {
         const from = path.join(__root, 'data', fileFriendlyLocation, params.futureFileInfo.files[0]);
         const to = path.join(__root, 'data', fileFriendlyLocation, `${fileFriendlyLocation}.final.tif`);

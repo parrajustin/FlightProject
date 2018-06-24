@@ -33,19 +33,13 @@ export function zipFile(fileRoot: string, files: string[], zipName: string): Pro
                 if (err) {
                     reject(err);
                 } else {
-                    zip.generateAsync({ 
-                        type: 'nodebuffer',
-                        compression: "DEFLATE",
-                        compressionOptions: {
-                            level: 9
-                        } 
-                    }).then(
-                        (data) => jetpack.writeAsync(zipName, data)
-                    ).then(
-                        () => resolve()
-                    ).catch(
-                        (reason) => reject(reason)
-                    );
+                    const pipeOut = jetpack.createWriteStream(zipName);
+
+                    zip.generateNodeStream({ streamFiles: true })
+                        .pipe(pipeOut)
+                        .on('finish', () => {
+                            resolve();
+                        });
                 }
             })
         }

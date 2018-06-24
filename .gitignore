@@ -2,7 +2,6 @@
 /data/**
 /output
 *.tif
-*.py
 /map/**
 /zip/**
 /dist/**

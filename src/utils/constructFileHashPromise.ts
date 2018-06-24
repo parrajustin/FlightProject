@@ -1,5 +1,4 @@
 import * as jetpack from 'fs-jetpack';
-import * as md5 from 'md5';
 
 /**
  * Wraps the process to read a file and hash it into a promise
@@ -9,10 +8,10 @@ import * as md5 from 'md5';
  */
 export function constructFileHashPromise(file): Promise<string> {
     return new Promise((resolve, reject) => {
-        jetpack.readAsync(file, 'buffer').then(
-            (value) => resolve(md5(value as Buffer))
+        jetpack.inspectAsync(file, { checksum: 'md5' }).then(
+            (out) => resolve(out['md5'])
         ).catch(
             (reason) => reject(reason)
-        );
+        )
     });
 }
